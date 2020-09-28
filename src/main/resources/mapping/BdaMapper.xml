@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.bda.mapper.BdaMapper">
+
+    <!--查询部门表-->
+    <select id="findAll" resultType="com.example.bda.pojo.Depart">
+       select depa.depID,
+            depa.depName,
+            depa.state,
+            depa.depLevel,
+            depa.superDepID,
+            case when depa.superDepID='ROOT' THEN '顶级目录' else depb.depName end as superDepName,
+            depa.lxr,
+            depa.phone,
+            depa.address from bda_department depa
+            LEFT JOIN bda_department depb on depa.superDepID=depb.depID
+    </select>
+    <!--查询菜单表-->
+    <select id="getMenuList" parameterType="java.lang.String" resultType="com.example.bda.pojo.Menu">
+       SELECT menu.*
+       from
+       bda_menu menu
+        INNER JOIN
+        sys_menu_permission_relation menuper
+        ON menu.menuID=menuper.menuid
+        INNER JOIN
+        sys_permission per
+        ON per.id=menuper.permissionid
+        INNER JOIN
+        sys_role_permission_relation roleper
+        ON roleper.permission_id=per.id
+        INNER JOIN
+        sys_role role
+        ON role.id=roleper.role_id
+        INNER JOIN
+        sys_user_role_relation userrole
+        ON userrole.role_id=role.id
+        INNER JOIN
+        sys_user us
+        ON us.id=userrole.user_id
+        where us.account=#{username}
+    </select>
+    <!--根据id删除部门-->
+    <delete id="deleteByDepID">
+        delete from bda_department where depID in 
+        <foreach collection="array" item="id" index="index" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+
+    </delete>
+
+
+    <!--新增部门-->
+    <insert id="add" parameterType="com.example.bda.pojo.Depart">
+        <selectKey keyProperty="depID" resultType="java.lang.String" order="BEFORE">
+            select replace(uuid(),'-','')
+        </selectKey>
+        insert into bda_department values (#{depID},#{depName},#{state},#{depLevel},#{superDepID},#{lxr},#{phone},#{address});
+    </insert>
+    <!--更新部门-->
+    <update id="update" parameterType="com.example.bda.pojo.Depart">
+
+        update bda_department set  depName=#{depName},state=#{state},
+        depLevel=#{depLevel},superDepID=#{superDepID},lxr=#{lxr},phone=#{phone},address=#{address} where depID=#{depID};
+    </update>
+
+
+
+    <select id="selectListByUser" parameterType="java.lang.Integer" resultType="com.example.bda.pojo.SysPermission">
+        SELECT
+        p.*
+        FROM
+        sys_user AS u
+        LEFT JOIN sys_user_role_relation AS ur
+        ON u.id = ur.user_id
+        LEFT JOIN sys_role AS r
+        ON r.id = ur.role_id
+        LEFT JOIN sys_role_permission_relation AS rp
+        ON r.id = rp.role_id
+        LEFT JOIN sys_permission AS p
+        ON p.id = rp.permission_id
+        WHERE u.id = #{userId}
+    </select>
+
+
+
+    <select id="selectListByPath" parameterType="java.lang.String" resultType="com.example.bda.pojo.SysPermission">
+        select perm.*
+        from
+        sys_permission perm
+        INNER JOIN sys_request_path_permission_relation permrela
+        ON perm.id=permrela.permission_id
+        INNER JOIN sys_request_path reqpath
+        ON reqpath.id=permrela.url_id
+        where reqpath.url=#{requestUrl}
+    </select>
+</mapper>

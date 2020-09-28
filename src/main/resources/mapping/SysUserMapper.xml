@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.bda.mapper.SysUserMapper">
+
+    <resultMap id="userResult" type="com.example.bda.pojo.SysUser">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="account" jdbcType="VARCHAR" property="account" />
+        <result column="user_name" jdbcType="VARCHAR" property="userName" />
+        <result column="password" jdbcType="VARCHAR" property="password" />
+        <result column="last_login_time" jdbcType="DATE" property="lastLoginTime" />
+        <result column="enabled" jdbcType="TINYINT" property="enabled" />
+        <result column="account_not_expired" jdbcType="TINYINT" property="accountNotExpired" />
+        <result column="account_not_locked" jdbcType="TINYINT" property="accountNotLocked" />
+        <result column="credentials_not_expired" jdbcType="TINYINT" property="credentialsNotExpired" />
+        <result column="create_time" jdbcType="DATE" property="createTime" />
+        <result column="update_time" jdbcType="DATE" property="updateTime" />
+        <result column="create_user" jdbcType="BIGINT" property="createUser" />
+        <result column="update_user" jdbcType="BIGINT" property="updateUser" />
+        <result column="dept_id" jdbcType="VARCHAR" property="deptID" />
+        <result column="sex" jdbcType="VARCHAR" property="sex" />
+        <result column="zw" jdbcType="VARCHAR" property="zw" />
+        <result column="dh" jdbcType="VARCHAR" property="dh" />
+        <result column="role_name" jdbcType="VARCHAR" property="roleName" />
+        <result column="depName" jdbcType="VARCHAR" property="depName" />
+    </resultMap>
+    <!--根据用户名查询用户-->
+    <select id="selectByName" parameterType="java.lang.String" resultType="com.example.bda.pojo.SysUser">
+        select * from sys_user where account = #{userName};
+    </select>
+
+    <!--根据部门查询用户-->
+    <select id="findUserBydepID" parameterType="java.lang.String" resultMap="userResult">
+        select usert.*,rolet.role_name,dep.depName
+        from sys_user usert
+        INNER JOIN sys_user_role_relation userrole
+        ON userrole.user_id=usert.id
+        INNER JOIN sys_role rolet
+        ON rolet.id=userrole.role_id
+        LEFT JOIN bda_department dep ON dep.depID=usert.dept_id where 1=1
+        <if test="depID != null and depID != ''">
+            and usert.dept_id = #{depID}
+        </if>
+    </select>
+
+
+    <update id="updateUser" parameterType="com.example.bda.pojo.SysUser">
+        update sys_user set  last_login_time=#{lastLoginTime},update_time=#{updateTime},update_user=#{updateUser} where id=#{id};
+    </update>
+
+    <insert id="add" parameterType="com.example.bda.pojo.SysUser">
+        insert into sys_user(account,user_name,password,
+        enabled,account_not_locked,create_time,
+        create_user,dept_id,sex,zw,dh)
+        values (#{account},#{userName},#{password},#{enabledInt},#{lockedInt},'2020-09-09',#{createUser},#{deptID},#{sex},#{zw},#{dh});
+    </insert>
+</mapper>
